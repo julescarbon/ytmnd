@@ -1,13 +1,11 @@
 #!/usr/bin/python
 
 import sys
-import aifc
 import os
 import os.path
 import re
 import urllib2
 import simplejson
-import random
 from optparse import OptionParser
 
 ytmnd_js = """
