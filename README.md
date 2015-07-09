@@ -3,5 +3,5 @@ ytmnd
 
 ytmnd scraper
 
-`./ytmnd.py [-u username] [domain]`
+`python ./ytmnd.py [-u username] [domain]`
 
