@@ -51,7 +51,6 @@ class YTMND:
 
     print "fetching %s" % domain
 
-    # Get the url of the sound and foreground
     ytmnd_name = domain
     ytmnd_html = urllib2.urlopen("http://" + domain + ".ytmnd.com").read()
     expr = r"ytmnd.site_id = (\d+);"
@@ -68,7 +67,6 @@ class YTMND:
 
   # Fetches the gif and mp3 for a post
   def fetch_media(self, ytmnd_info):
-    # Assign full url names for the sound and foreground
     domain = ytmnd_info['site']['domain']
     original_gif = ytmnd_info['site']['foreground']['url']
     gif_type = original_gif.split(".")[-1]
@@ -82,7 +80,6 @@ class YTMND:
         original_wav = value['file_url']
         wav_type = ytmnd_info['site']['sound']['file_type']
 
-    # download files
     os.system("wget --quiet -O %s %s" % (domain + "." + gif_type, original_gif))
     os.system("wget --quiet -O %s %s" % (domain + "." + wav_type, original_wav))
 
@@ -112,20 +109,27 @@ class YTMND:
     fn.write("<title>%s</title>\n" % title)
     fn.write("<style>\n")
     fn.write("*{margin:0;padding:0;width:100%;height:100%;}\n")
-    fn.write("body{background-color:%s;" % bgcolor)
+    fn.write("body{font-size:12px;font-weight:normal;font-style:normal;overflow:hidden;")
+    fn.write("background-color:%s;" % bgcolor)
     fn.write("background-image:url(%s.%s);" % (domain, gif_type))
     if placement == "mc":
       fn.write("background-position: center center; background-repeat: no-repeat;}")
     elif placement == "tile":
       fn.write("background-position: top left; background-repeat: repeat;}")
     fn.write("\n")
+    fn.write("#zoom_text{position:absolute;left:0;top:0;width:1000px;z-index:10;text-align:center;font-family:Tahoma, sans-serif}")
+    fn.write("#zoom_text div{position:absolute;width:1000px}")
     fn.write("</style>\n")
     fn.write("</head>\n")
 
+    fn.write("<body>\n")
+    self.write_zoom_text(fn, ytmnd_info)
+    
     if self.no_web_audio:
-      fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
+      fn.write("<audio src=%s.mp3 loop autoplay>\n" % domain)
+      fn.write("</body>\n")
     else:
-      fn.write("<body></body>\n")
+      fn.write("</body>\n")
       fn.write("<script>var url = '%s.%s'</script>\n" % (domain, wav_type))
       fn.write("<script src='ytmnd.js'></script>\n")
       fn.write("<script type='application/json'>\n")
@@ -134,6 +138,42 @@ class YTMND:
     fn.write("</html>")
 
     fn.close()
+  
+  # print out the zoom text
+  def write_zoom_text (self, fn, ytmnd_info):
+    if 'zoom_text' not in ytmnd_info['site']:
+      return
+    
+    zoom_text = ytmnd_info['site']['zoom_text']
+
+    fn.write('<div id="zoom_text">')
+
+    offset = 100
+    if "line_3" in zoom_text and len(zoom_text["line_3"]) > 0:
+      self.write_zoom_layers( fn, zoom_text['line_3'], offset, 500 )
+      offset += 50
+    if "line_2" in zoom_text and len(zoom_text["line_2"]) > 0:
+      self.write_zoom_layers( fn, zoom_text['line_2'], offset, 250 )
+      offset += 50
+    if "line_1" in zoom_text and len(zoom_text["line_1"]) > 0:
+      self.write_zoom_layers( fn, zoom_text['line_1'], offset, 0 )
+  
+    fn.write('</div>')
+
+  # print the layers of zoom text
+  def write_zoom_layers (self, fn, text, offset, top):
+    for i in xrange(1, 51):
+      z_index = offset + i
+      row_left = i * 2
+      row_top = top + i
+      font_size = i * 2
+      if i == 50:
+        color = 0
+      else:
+        color = i * 4
+    
+      fn.write("<div style='z-index: %d; left: %dpx; top: %dpx; color: rgb(%d, %d, %d); font-size: %dpt;'>%s</div>"
+        % (z_index, row_left, row_top, color, color, color, font_size, text))
 
   # Copies the looping audio JS into place
   def copy_ytmnd_js (self):
