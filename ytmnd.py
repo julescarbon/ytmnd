@@ -60,7 +60,7 @@ class YTMND:
     for line in ytmnd_html:
       if 'profile_link' in line:
       
-        expr = r"href=\"http://(\S+).ytmnd.com\""
+        expr = r"site_link\" href=\"http://(\S+).ytmn(d|sfw)?.com\""
         domain = re.search(expr,line).group(1)
         domains.append(domain)
 
