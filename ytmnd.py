@@ -43,6 +43,8 @@ class YTMND:
 
   def __init__ (self):
     self.media_only = False
+    self.no_web_audio = False
+    self.json = False
 
   def fetch_user(self, user):
     if user == "":
@@ -63,17 +65,13 @@ class YTMND:
         domains.append(domain)
 
     print ">> found %d domains" % len( domains )
-    os.system("mkdir %s" % user)
+    os.system("mkdir -p %s" % user)
     os.chdir(user)
-    self.write_ytmnd_js()
+    if not self.no_web_audio:
+      self.write_ytmnd_js()
     for domain in domains:
-      ytmnd_info = ytmnd.fetch_ytmnd( domain )
-      ytmnd.fetch_media(ytmnd_info)
-      if get_media:
-        ytmnd.write_index(ytmnd_info)
+      ytmnd.fetch_ytmnd( domain )
     os.chdir("..")
-
-    return ytmnd_info
 
   def fetch_ytmnd(self, domain):
 
@@ -90,17 +88,22 @@ class YTMND:
     ytmnd_id = re.search(expr,ytmnd_html).group(1)
     ytmnd_info = simplejson.load(urllib2.urlopen("http://" + domain + ".ytmnd.com/info/" + ytmnd_id + "/json"))
 
-    ytmnd.fetch_media(ytmnd_info)
-    if not ytmnd.media_only:
-      ytmnd.write_index(ytmnd_info)
-
-    return ytmnd_info
+    if ytmnd.json:
+      ytmnd.write_json(ytmnd_info)
+    else:
+      ytmnd.fetch_media(ytmnd_info)
+      if not ytmnd.media_only:
+        ytmnd.write_index(ytmnd_info)
 
   def fetch_media(self, ytmnd_info):
     # Assign full url names for the sound and foreground
     domain = ytmnd_info['site']['domain']
     original_gif = ytmnd_info['site']['foreground']['url']
     original_wav = ytmnd_info['site']['sound']['url']
+    
+    if 'alternates' in ytmnd_info['site']['sound']:
+      key, value = ytmnd_info['site']['sound']['alternates'].popitem()
+      original_wav = value['file_url']
 
     # download files
     os.system("wget --quiet -O %s %s" % (domain + ".gif", original_gif))
@@ -124,10 +127,12 @@ class YTMND:
     fn.write( simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') )
     fn.write("</script>")
 
-    # fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
-    fn.write("<script>var url = '%s.mp3'</script>" % domain)
+    if self.no_web_audio:
+      fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
+    else:
+      fn.write("<script>var url = '%s.mp3'</script>" % domain)
+      fn.write("<script src='ytmnd.js'></script>")
 
-    fn.write("<script src='ytmnd.js'></script>")
     fn.close()
   
   def write_ytmnd_js (self):
@@ -147,20 +152,24 @@ if __name__ == '__main__':
   parser = OptionParser()
 
   parser.add_option("-u", "--user", action="store_true")
-  parser.add_option("-m", "--media", action="store_true")
+  parser.add_option("--media-only", action="store_true")
+  parser.add_option("--no-web-audio", action="store_true")
+  parser.add_option("-j", "--json", action="store_true")
 
   (options, args) = parser.parse_args()
 
   if len(args) == 0:
-    print "usage: ./ytmnd.py [-u username] [--media] [domain]"
+    print "usage: ./ytmnd.py [-u username] [--media-only] [--no-web-audio] [--json] [domain]"
     sys.exit(1)
   
   ytmnd = YTMND ()
-  ytmnd.media_only = options.media
+  ytmnd.media_only = options.media_only
+  ytmnd.no_web_audio = options.no_web_audio
+  ytmnd.json = options.json
 
   if options.user:
     user = args[0]
-    ytmnd.fetch_user(user)
+    ytmnd.fetch_user( user )
 
   else:
     name = args[0]
