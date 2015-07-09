@@ -152,5 +152,5 @@ if __name__ == '__main__':
     ytmnd.fetch_user( user )
 
   else:
-    name = args[0]
+    name = args[0].replace("http://","").replace(".ytmnsfw.com","").replace(".ytmnd.com","").replace("/","")
     ytmnd.fetch_ytmnd( name )
