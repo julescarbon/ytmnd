@@ -89,7 +89,8 @@ class YTMND:
     ytmnd_info = simplejson.load(urllib2.urlopen("http://" + domain + ".ytmnd.com/info/" + ytmnd_id + "/json"))
 
     if ytmnd.json:
-      ytmnd.write_json(ytmnd_info)
+      print simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ')
+      # ytmnd.write_json(ytmnd_info)
     else:
       ytmnd.fetch_media(ytmnd_info)
       if not ytmnd.media_only:
@@ -114,24 +115,30 @@ class YTMND:
     # print simplejson.dumps(ytmnd_info)
     domain = ytmnd_info['site']['domain']
     bgcolor = ytmnd_info['site']['background']['color']
+    title = ytmnd_info['site']['description']
   
     fn = open(domain + ".html", 'w')
-    fn.write("<style>")
-    fn.write("*{margin:0;padding:0;width:100%;height:100%;}")
+    fn.write("<html>\n")
+    fn.write("<head>\n")
+    fn.write("<title>%s</title>\n" % title)
+    fn.write("<style>\n")
+    fn.write("*{margin:0;padding:0;width:100%;height:100%;}\n")
     fn.write("body{background-color:%s;" % bgcolor)
     fn.write("background-image:url(%s.gif);" % domain)
-    fn.write("background-position: center center; background-repeat: no-repeat;}")
-    fn.write("</style>")
-    fn.write("<body></body>")
-    fn.write("<script type='application/json'>")
-    fn.write( simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') )
-    fn.write("</script>")
+    fn.write("background-position: center center; background-repeat: no-repeat;}\n")
+    fn.write("</style>\n")
+    fn.write("</head>\n")
 
     if self.no_web_audio:
       fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
     else:
-      fn.write("<script>var url = '%s.mp3'</script>" % domain)
-      fn.write("<script src='ytmnd.js'></script>")
+      fn.write("<body></body>\n")
+      fn.write("<script>var url = '%s.mp3'</script>\n" % domain)
+      fn.write("<script src='ytmnd.js'></script>\n")
+      fn.write("<script type='application/json'>\n")
+      fn.write(simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') + "\n")
+      fn.write("</script>\n")
+    fn.write("</html>")
 
     fn.close()
   
