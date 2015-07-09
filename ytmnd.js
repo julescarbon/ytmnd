@@ -12,7 +12,7 @@
 			function loop(){
         if (source) {
           source.start(0)
-          setTimeout(loop, source.buffer.duration * 1000 - 60)
+          setTimeout(loop, source.buffer.duration * 1000 - (source.buffer.duration < 2 ? 0 : 60) )
         }
         else {
           setTimeout(loop, 0)

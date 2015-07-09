@@ -8,37 +8,6 @@ import urllib2
 import simplejson
 from optparse import OptionParser
 
-ytmnd_js = """
-(function(){
-  var hasWebKit = ('webkitAudioContext' in window) && !('chrome' in window)
-  var context = new webkitAudioContext()
-  var request = new XMLHttpRequest()
-  request.open('GET', url, true) 
-  request.responseType = 'arraybuffer'
-  request.onload = function() {
-    context.decodeAudioData(request.response, function(response) {
-      // source.loop = true
-      loop()
-      var source
-      function loop(){
-        if (source) {
-          source.start(0)
-          setTimeout(loop, source.buffer.duration * 1000 - 60)
-        }
-        else {
-          setTimeout(loop, 0)
-        }
-        source = context.createBufferSource()
-        source.connect(context.destination)
-        source.buffer = response
-      }
-    }, function () { console.error('The request failed.') } )
-  }
-  request.send()
-})()
-"""
-
-
 class YTMND:
 
   def __init__ (self):
@@ -68,7 +37,7 @@ class YTMND:
     os.system("mkdir -p %s" % user)
     os.chdir(user)
     if not self.no_web_audio:
-      self.write_ytmnd_js()
+      self.copy_ytmnd_js()
     for domain in domains:
       ytmnd.fetch_ytmnd( domain )
     os.chdir("..")
@@ -116,6 +85,7 @@ class YTMND:
     domain = ytmnd_info['site']['domain']
     bgcolor = ytmnd_info['site']['background']['color']
     title = ytmnd_info['site']['description']
+    placement = ytmnd_info['site']['foreground']['placement']
   
     fn = open(domain + ".html", 'w')
     fn.write("<html>\n")
@@ -125,7 +95,11 @@ class YTMND:
     fn.write("*{margin:0;padding:0;width:100%;height:100%;}\n")
     fn.write("body{background-color:%s;" % bgcolor)
     fn.write("background-image:url(%s.gif);" % domain)
-    fn.write("background-position: center center; background-repeat: no-repeat;}\n")
+    if placement == "mc":
+			fn.write("background-position: center center; background-repeat: no-repeat;}")
+    elif placement == "tile":
+			fn.write("background-position: top left; background-repeat: repeat;}")
+    fn.write("\n")
     fn.write("</style>\n")
     fn.write("</head>\n")
 
@@ -142,10 +116,9 @@ class YTMND:
 
     fn.close()
   
-  def write_ytmnd_js (self):
+  def copy_ytmnd_js (self):
     if not os.path.isfile("ytmnd.js"):
-      with open('ytmnd.js', 'w') as f:
-        f.write(ytmnd_js)
+			os.system("cp ../ytmnd.js .")
 
   def write_json (self, ytmnd_info):
     domain = ytmnd_info['site']['domain']
