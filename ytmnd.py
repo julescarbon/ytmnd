@@ -15,12 +15,12 @@ class YTMND:
     self.no_web_audio = False
     self.json = False
 
+  # Scrapes sites from the profile page, then fetches them
   def fetch_user(self, user):
     if user == "":
       print("expecting one ytmnd name, got "+str(sys.argv))
       return
 
-    # Get the url of the sound and foreground
     ytmnd_name = user 
     ytmnd_html = urllib2.urlopen("http://ytmnd.com/users/" + ytmnd_name + "/sites").readlines()
     
@@ -42,6 +42,7 @@ class YTMND:
       ytmnd.fetch_ytmnd( domain )
     os.chdir("..")
 
+  # Fetches a single subdomain
   def fetch_ytmnd(self, domain):
 
     if domain == "":
@@ -65,6 +66,7 @@ class YTMND:
       if not ytmnd.media_only:
         ytmnd.write_index(ytmnd_info)
 
+  # Fetches the gif and mp3 for a post
   def fetch_media(self, ytmnd_info):
     # Assign full url names for the sound and foreground
     domain = ytmnd_info['site']['domain']
@@ -84,6 +86,7 @@ class YTMND:
     os.system("wget --quiet -O %s %s" % (domain + "." + gif_type, original_gif))
     os.system("wget --quiet -O %s %s" % (domain + "." + wav_type, original_wav))
 
+  # Writes an html file emulating the ytmnd format
   def write_index(self, ytmnd_info):
   
     # print simplejson.dumps(ytmnd_info)
@@ -131,11 +134,13 @@ class YTMND:
     fn.write("</html>")
 
     fn.close()
-  
+
+  # Copies the looping audio JS into place
   def copy_ytmnd_js (self):
     if not os.path.isfile("ytmnd.js"):
       os.system("cp ../ytmnd.js .")
 
+  # Writes site JSON to a file
   def write_json (self, ytmnd_info):
     domain = ytmnd_info['site']['domain']
 
@@ -148,8 +153,8 @@ if __name__ == '__main__':
   parser = OptionParser()
 
   parser.add_option("-u", "--user", action="store_true")
-  parser.add_option("--media-only", action="store_true")
-  parser.add_option("--no-web-audio", action="store_true")
+  parser.add_option("-m", "--media-only", action="store_true")
+  parser.add_option("-w", "--no-web-audio", action="store_true")
   parser.add_option("-j", "--json", action="store_true")
 
   (options, args) = parser.parse_args()
@@ -170,3 +175,4 @@ if __name__ == '__main__':
   else:
     name = args[0].replace("http://","").replace(".ytmnsfw.com","").replace(".ytmnd.com","").replace("/","")
     ytmnd.fetch_ytmnd( name )
+
