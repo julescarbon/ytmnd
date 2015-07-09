@@ -15,12 +15,12 @@ the html files use the web audio api in an attempt to get seamless looping (oddl
 options
 -------
 
-|
+| flag | description |
 | -------------- | ----------------------- |
-| --media-only   | only download the gif and mp3 |
-| --no-web-audio | uses the <audio> tag instead of web audio |
-| --json         | dumps json for the ytmnd to stdout |
-| --user (or -u) | fetch all ytmnds for a user |
+| `--media-only`   | only download the gif and mp3 |
+| `--no-web-audio` | uses the <audio> tag instead of web audio |
+| `--json`         | dumps json for the ytmnd to stdout |
+| `--user` (or `-u`) | fetch all ytmnds for a user |
 
 license
 -------
