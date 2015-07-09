@@ -15,6 +15,7 @@ the html files use the web audio api in an attempt to get seamless looping (oddl
 options
 -------
 
+|
 | -------------- | ----------------------- |
 | --media-only   | only download the gif and mp3 |
 | --no-web-audio | uses the <audio> tag instead of web audio |
