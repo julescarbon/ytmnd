@@ -69,15 +69,20 @@ class YTMND:
     # Assign full url names for the sound and foreground
     domain = ytmnd_info['site']['domain']
     original_gif = ytmnd_info['site']['foreground']['url']
+    gif_type = original_gif.split(".")[-1]
     original_wav = ytmnd_info['site']['sound']['url']
+    wav_type = ytmnd_info['site']['sound']['type']
     
     if 'alternates' in ytmnd_info['site']['sound']:
-      key, value = ytmnd_info['site']['sound']['alternates'].popitem()
-      original_wav = value['file_url']
+      key = ytmnd_info['site']['sound']['alternates'].keys()[0]
+      value = ytmnd_info['site']['sound']['alternates'][key]
+      if value['file_type'] != 'swf':
+        original_wav = value['file_url']
+        wav_type = ytmnd_info['site']['sound']['file_type']
 
     # download files
-    os.system("wget --quiet -O %s %s" % (domain + ".gif", original_gif))
-    os.system("wget --quiet -O %s %s" % (domain + ".mp3", original_wav))
+    os.system("wget --quiet -O %s %s" % (domain + "." + gif_type, original_gif))
+    os.system("wget --quiet -O %s %s" % (domain + "." + wav_type, original_wav))
 
   def write_index(self, ytmnd_info):
   
@@ -86,7 +91,18 @@ class YTMND:
     bgcolor = ytmnd_info['site']['background']['color']
     title = ytmnd_info['site']['description']
     placement = ytmnd_info['site']['foreground']['placement']
-  
+
+    original_gif = ytmnd_info['site']['foreground']['url']
+    gif_type = original_gif.split(".")[-1]
+    wav_type = ytmnd_info['site']['sound']['type']
+    
+    if 'alternates' in ytmnd_info['site']['sound']:
+      key = ytmnd_info['site']['sound']['alternates'].keys()[0]
+      value = ytmnd_info['site']['sound']['alternates'][key]
+      if value['file_type'] != 'swf':
+        original_wav = value['file_url']
+        wav_type = ytmnd_info['site']['sound']['file_type']
+
     fn = open(domain + ".html", 'w')
     fn.write("<html>\n")
     fn.write("<head>\n")
@@ -94,11 +110,11 @@ class YTMND:
     fn.write("<style>\n")
     fn.write("*{margin:0;padding:0;width:100%;height:100%;}\n")
     fn.write("body{background-color:%s;" % bgcolor)
-    fn.write("background-image:url(%s.gif);" % domain)
+    fn.write("background-image:url(%s.%s);" % (domain, gif_type))
     if placement == "mc":
-			fn.write("background-position: center center; background-repeat: no-repeat;}")
+      fn.write("background-position: center center; background-repeat: no-repeat;}")
     elif placement == "tile":
-			fn.write("background-position: top left; background-repeat: repeat;}")
+      fn.write("background-position: top left; background-repeat: repeat;}")
     fn.write("\n")
     fn.write("</style>\n")
     fn.write("</head>\n")
@@ -107,7 +123,7 @@ class YTMND:
       fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
     else:
       fn.write("<body></body>\n")
-      fn.write("<script>var url = '%s.mp3'</script>\n" % domain)
+      fn.write("<script>var url = '%s.%s'</script>\n" % (domain, wav_type))
       fn.write("<script src='ytmnd.js'></script>\n")
       fn.write("<script type='application/json'>\n")
       fn.write(simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') + "\n")
@@ -118,7 +134,7 @@ class YTMND:
   
   def copy_ytmnd_js (self):
     if not os.path.isfile("ytmnd.js"):
-			os.system("cp ../ytmnd.js .")
+      os.system("cp ../ytmnd.js .")
 
   def write_json (self, ytmnd_info):
     domain = ytmnd_info['site']['domain']
