@@ -20,9 +20,9 @@ ytmnd_js = """
   request.onload = function() {
     context.decodeAudioData(request.response, function(response) {
       // source.loop = true
-			loop()
-			var source
-			function loop(){
+      loop()
+      var source
+      function loop(){
         if (source) {
           source.start(0)
           setTimeout(loop, source.buffer.duration * 1000 - 60)
@@ -33,7 +33,7 @@ ytmnd_js = """
         source = context.createBufferSource()
         source.connect(context.destination)
         source.buffer = response
-			}
+      }
     }, function () { console.error('The request failed.') } )
   }
   request.send()
@@ -42,6 +42,9 @@ ytmnd_js = """
 
 
 class YTMND:
+
+  def __init__ (self):
+    self.media_only = False
 
   def fetch_user(self, user):
     if user == "":
@@ -68,7 +71,8 @@ class YTMND:
     for domain in domains:
       ytmnd_info = ytmnd.fetch_ytmnd( domain )
       ytmnd.fetch_media(ytmnd_info)
-      ytmnd.write_index(ytmnd_info)
+      if get_media:
+        ytmnd.write_index(ytmnd_info)
     os.chdir("..")
 
     return ytmnd_info
@@ -87,6 +91,10 @@ class YTMND:
     expr = r"ytmnd.site_id = (\d+);"
     ytmnd_id = re.search(expr,ytmnd_html).group(1)
     ytmnd_info = simplejson.load(urllib2.urlopen("http://" + domain + ".ytmnd.com/info/" + ytmnd_id + "/json"))
+
+    ytmnd.fetch_media(ytmnd_info)
+    if not ytmnd.media_only:
+      ytmnd.write_index(ytmnd_info)
 
     return ytmnd_info
 
@@ -114,10 +122,11 @@ class YTMND:
     fn.write("background-position: center center; background-repeat: no-repeat;}")
     fn.write("</style>")
     fn.write("<body></body>")
-#    fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
-#    fn.write("<script>")
-#    fn.write( simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') )
-#    fn.write("</script>")
+    fn.write("<script type='application/json'>")
+    fn.write( simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ') )
+    fn.write("</script>")
+
+    # fn.write("<body><audio src=%s.mp3 loop autoplay></body>" % domain)
     fn.write("<script>var url = '%s.mp3'</script>" % domain)
 
     fn.write("<script src='ytmnd.js'></script>")
@@ -144,21 +153,17 @@ if __name__ == '__main__':
 
   (options, args) = parser.parse_args()
 
-
   if len(args) == 0:
     print "usage: ./ytmnd.py [-u username] [--media] [domain]"
     sys.exit(1)
   
   ytmnd = YTMND ()
-  
+  ytmnd.media_only = options.media
+
   if options.user:
     user = args[0]
     ytmnd.fetch_user(user)
 
   else:
     name = args[0]
-    ytmnd_info = ytmnd.fetch_ytmnd( name )
-    ytmnd.fetch_media(ytmnd_info)
-    if not options.media:
-			self.write_ytmnd_js()
-      ytmnd.write_index(ytmnd_info)
+    ytmnd.fetch_ytmnd( name )
