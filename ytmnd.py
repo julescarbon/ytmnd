@@ -38,9 +38,14 @@ class YTMND:
         domains.append(domain)
 
     if self.json_only:
+      if self.media_only:
+        os.system("mkdir -p %s" % user)
+        os.chdir(user)
       parsed = []
       for domain in domains:
         parsed.append( self.fetch_ytmnd( domain ) )
+      if self.media_only:
+        os.chdir("..")
       self.write_json(ytmnd_name, parsed)
 
     else:
