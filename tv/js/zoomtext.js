@@ -13,19 +13,19 @@ var zoomtext = (function(){
       return zoomtext.empty()
     }
 
-    var text = ytmnd_info['site']['zoom_text']
+    var text = site['zoom_text']
 
     var offset = 100, rows = ""
-    if ("line_3" in zoom_text && zoom_text["line_3"].length > 0) {
-      rows += zoomtext.add_row( zoom_text['line_3'], offset, 500 )
+    if ("line_3" in zoom_text && text["line_3"].length > 0) {
+      rows += zoomtext.add_row( text['line_3'], offset, 500 )
       offset += 50
     }
-    if ("line_2" in zoom_text && zoom_text["line_2"].length > 0) {
-      rows += zoomtext.add_row( zoom_text['line_2'], offset, 250 )
+    if ("line_2" in zoom_text && text["line_2"].length > 0) {
+      rows += zoomtext.add_row( text['line_2'], offset, 250 )
       offset += 50
     }
-    if ("line_1" in zoom_text && zoom_text["line_1"].length > 0) {
-      rows += zoomtext.add_row( zoom_text['line_1'], offset, 500 )
+    if ("line_1" in zoom_text && text["line_1"].length > 0) {
+      rows += zoomtext.add_row( text['line_1'], offset, 500 )
     }
     
     el.innerHTML = rows.join("")

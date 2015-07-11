@@ -19,10 +19,9 @@ var audio = (function(){
       context.decodeAudioData(request.response, function(buf) {
         bufs[site.domain] = buf
         loader.ready(site.domain + "_sound")
-      }, function () { console.error('The request failed.') } )
-    }
-    request.onerror = function() {
-      ytmnd.error()
+      }, function () {
+        ytmnd.error()
+      })
     }
     request.send()
   }

@@ -4,7 +4,8 @@ var ytmnd = (function(){
   var sites = []
   var loaded = {}
   var index = 0
-  var play_immediately = true
+  var loading = false
+  var next_domain = ""
   
   var base_href = 'https://ltho.s3.amazonaws.com/ytmnd'
   
@@ -25,7 +26,25 @@ var ytmnd = (function(){
   
   ytmnd.ready = function(){
     shuffle(sites)
+    ytmnd.bind()
     ytmnd.play_index(index)
+  }
+  
+  ytmnd.bind = function(){
+    window.addEventListener("keydown", function(e){
+      console.log(e.keyCode)
+      switch (e.keyCode){
+        case 37: // left
+        case 38: // up
+          ytmnd.prev()
+          break
+        case 32: // space
+        case 39: // right
+        case 40: // down
+          ytmnd.next()
+          break
+      }
+    })
   }
 
   ytmnd.preload = function(site){
@@ -36,6 +55,8 @@ var ytmnd = (function(){
       loaded[site.domain] = site
       if (next_domain == site.domain) {
         ytmnd.play(site)
+        next_domain = ""
+        loading = false
       }
     })
     loader.register('init')
@@ -57,12 +78,13 @@ var ytmnd = (function(){
     else {
       next_domain = site.domain
       ytmnd.preload(site)
+      loading = true
     }
   }
     
   ytmnd.play = function(site){
     document.querySelector("title").innerHTML = site.title
-    document.body.style.backgroundColor = site.bgcolor
+    document.body.style.backgroundColor = "#" + site.bgcolor
     document.body.style.backgroundImage = "url(" + site.image_url + ")"
     document.body.className = site.placement
     audio.play(site.domain)
@@ -76,7 +98,7 @@ var ytmnd = (function(){
     zoomtext.empty()
   }
   
-  ytmnd.back = function(){
+  ytmnd.prev = function(){
     ytmnd.stop()
     index = (index-1) % sites.length
     ytmnd.play_index(index)
@@ -92,6 +114,10 @@ var ytmnd = (function(){
     setTimeout(function(){
       ytmnd.preload_index((index+1) % sites.length)
     }, 1000)
+  }
+  
+  ytmnd.error = function(){
+    ytmnd.next()
   }
 
   return ytmnd
