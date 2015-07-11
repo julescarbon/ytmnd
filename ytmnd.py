@@ -74,6 +74,8 @@ class YTMND:
     if self.print_json:
       print simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ')
     elif self.json_only:
+      if self.media_only:
+        self.fetch_media(ytmnd_info)
       return self.parse_json(ytmnd_info)
     elif self.media_only:
       self.fetch_media(ytmnd_info)

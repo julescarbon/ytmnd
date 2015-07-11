@@ -3,8 +3,9 @@ ytmnd
 
 ytmnd scraper.
 
-`./ytmnd.py -u _username_`
-`./ytmnd.py domain`
+`./ytmnd.py -u [username]`
+
+`./ytmnd.py [domain]`
 
 serving
 -------
@@ -18,12 +19,12 @@ options
 
 | flag | description |
 | -------------- | ----------------------- |
+| `--user` (or `-u`) | fetch all ytmnds for a user |
 | `--media-only`   | only download the gif and mp3 |
 | `--html-only`    | only write an html file|
 | `--json-only`    | writes simplified json to a file |
 | `--no-web-audio` | uses the <audio> tag instead of web audio |
 | `--print-json`   | dumps raw json from ytmnd to stdout |
-| `--user` (or `-u`) | fetch all ytmnds for a user |
 
 license
 -------
