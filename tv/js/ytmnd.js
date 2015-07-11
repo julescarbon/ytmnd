@@ -44,6 +44,11 @@ var ytmnd = (function(){
     loader.ready('init')
   }
 
+  ytmnd.preload_index = function(index){
+    var site = sites[index]
+    ytmnd.preload(site)
+  }
+
   ytmnd.play_index = function(index){
     var site = sites[index]
     if (loaded[site.domain]) {
