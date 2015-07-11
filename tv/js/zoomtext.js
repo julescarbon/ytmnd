@@ -2,29 +2,29 @@ var zoomtext = (function(){
 
   var zoomtext = {}
 
-  var el = document.querySelctor("#zoomtext")
+  var el = document.querySelector("#zoom_text")
 
   zoomtext.empty = function(){
     el.innerHTML = ""
   }
   
   zoomtext.render = function(site){
-    if (site.zoom_text.line_1.length == 0) {
+    if (! site.zoom_text.line_1) {
       return zoomtext.empty()
     }
 
     var text = ytmnd_info['site']['zoom_text']
 
     var offset = 100, rows = ""
-    if ("line_3" in zoom_text and zoom_text["line_3"].length > 0) {
+    if ("line_3" in zoom_text && zoom_text["line_3"].length > 0) {
       rows += zoomtext.add_row( zoom_text['line_3'], offset, 500 )
       offset += 50
     }
-    if ("line_2" in zoom_text and zoom_text["line_2"].length > 0) {
+    if ("line_2" in zoom_text && zoom_text["line_2"].length > 0) {
       rows += zoomtext.add_row( zoom_text['line_2'], offset, 250 )
       offset += 50
     }
-    if ("line_1" in zoom_text and zoom_text["line_1"].length > 0) {
+    if ("line_1" in zoom_text && zoom_text["line_1"].length > 0) {
       rows += zoomtext.add_row( zoom_text['line_1'], offset, 500 )
     }
     
