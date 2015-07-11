@@ -212,6 +212,12 @@ class YTMND:
     gif_type = ytmnd_info['site']['foreground']['url'].split(".")[-1]
     wav_type = ytmnd_info['site']['sound']['type']
     zoom_text = ytmnd_info['site']['zoom_text']
+    keywords = ytmnd_info['site']['keywords']
+    username = ytmnd_info['site']['user']['user_name']
+    sound_origin = ytmnd_info['site']['sound_origin']
+    image_origin = ytmnd_info['site']['fg_image_origin']
+    work_safe = ytmnd_info['site']['work_safe']
+
     if len(zoom_text['line_1']) == 0:
       zoom_text = ""
     
@@ -223,14 +229,18 @@ class YTMND:
 
     simplified_info = {
       'domain': domain,
-      'bgcolor': bgcolor,
       'title': title,
+      'username': username,
+      'work_safe': work_safe,
+      'bgcolor': bgcolor,
       'placement': placement,
-      'gif': domain + "." + gif_type,
-      'wav': domain + "." + wav_type,
-      'gif_type': gif_type,
-      'wav_type': wav_type,
       'zoom_text': zoom_text,
+      'image': domain + "." + gif_type,
+      'sound': domain + "." + wav_type,
+      'image_type': gif_type,
+      'sound_type': wav_type,
+      'image_origin': image_origin,
+      'sound_origin': sound_origin,
     }
 
     return simplified_info
