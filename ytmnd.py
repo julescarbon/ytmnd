@@ -4,6 +4,7 @@ import sys
 import os
 import os.path
 import re
+import time
 import urllib2
 import simplejson
 from optparse import OptionParser
@@ -11,9 +12,13 @@ from optparse import OptionParser
 class YTMND:
 
   def __init__ (self):
+    self.user_mode = False
     self.media_only = False
+    self.html_only = False
+    self.json_only = False
     self.no_web_audio = False
-    self.json = False
+    self.print_json = False
+    self.sleep = 5
 
   # Scrapes sites from the profile page, then fetches them
   def fetch_user(self, user):
@@ -28,19 +33,25 @@ class YTMND:
     
     for line in ytmnd_html:
       if 'profile_link' in line:
-      
         expr = r"site_link\" href=\"http://(\S+).ytmn(d|sfw)?.com\""
         domain = re.search(expr,line).group(1)
         domains.append(domain)
 
-    print ">> found %d domains" % len( domains )
-    os.system("mkdir -p %s" % user)
-    os.chdir(user)
-    if not self.no_web_audio:
-      self.copy_ytmnd_js()
-    for domain in domains:
-      ytmnd.fetch_ytmnd( domain )
-    os.chdir("..")
+    if self.json_only:
+      parsed = []
+      for domain in domains:
+        parsed.append( self.fetch_ytmnd( domain ) )
+      self.write_json(ytmnd_name, parsed)
+
+    else:
+      print ">> found %d domains" % len( domains )
+      os.system("mkdir -p %s" % user)
+      os.chdir(user)
+      if not self.no_web_audio:
+        self.copy_ytmnd_js()
+      for domain in domains:
+        self.fetch_ytmnd( domain )
+      os.chdir("..")
 
   # Fetches a single subdomain
   def fetch_ytmnd(self, domain):
@@ -49,7 +60,10 @@ class YTMND:
       print("expecting one ytmnd name, got "+str(sys.argv))
       return
 
-    print "fetching %s" % domain
+    if not self.print_json:
+      print "fetching %s" % domain
+    if not self.sleep:
+      time.sleep(self.sleep)
 
     ytmnd_name = domain
     ytmnd_html = urllib2.urlopen("http://" + domain + ".ytmnd.com").read()
@@ -57,13 +71,19 @@ class YTMND:
     ytmnd_id = re.search(expr,ytmnd_html).group(1)
     ytmnd_info = simplejson.load(urllib2.urlopen("http://" + domain + ".ytmnd.com/info/" + ytmnd_id + "/json"))
 
-    if ytmnd.json:
+    if self.print_json:
       print simplejson.dumps(ytmnd_info, sort_keys=True, indent=4 * ' ')
-      # ytmnd.write_json(ytmnd_info)
+    elif self.json_only:
+      return self.parse_json(ytmnd_info)
+    elif self.media_only:
+      self.fetch_media(ytmnd_info)
+    elif self.html_only:
+      self.write_index(ytmnd_info)
     else:
-      ytmnd.fetch_media(ytmnd_info)
-      if not ytmnd.media_only:
-        ytmnd.write_index(ytmnd_info)
+      self.fetch_media(ytmnd_info)
+      self.write_index(ytmnd_info)
+
+    return ytmnd_info
 
   # Fetches the gif and mp3 for a post
   def fetch_media(self, ytmnd_info):
@@ -126,7 +146,7 @@ class YTMND:
     self.write_zoom_text(fn, ytmnd_info)
     
     if self.no_web_audio:
-      fn.write("<audio src=%s.mp3 loop autoplay>\n" % domain)
+      fn.write("<audio src='%s.%s' loop autoplay>\n" % (domain, wav_type))
       fn.write("</body>\n")
     else:
       fn.write("</body>\n")
@@ -180,12 +200,43 @@ class YTMND:
     if not os.path.isfile("ytmnd.js"):
       os.system("cp ../ytmnd.js .")
 
-  # Writes site JSON to a file
-  def write_json (self, ytmnd_info):
+  # Parses data we need out of JSON
+  def parse_json (self, ytmnd_info):
     domain = ytmnd_info['site']['domain']
+    bgcolor = ytmnd_info['site']['background']['color']
+    title = ytmnd_info['site']['description']
+    placement = ytmnd_info['site']['foreground']['placement']
 
+    gif_type = ytmnd_info['site']['foreground']['url'].split(".")[-1]
+    wav_type = ytmnd_info['site']['sound']['type']
+    zoom_text = ytmnd_info['site']['zoom_text']
+    if len(zoom_text['line_1']) == 0:
+      zoom_text = ""
+    
+    if 'alternates' in ytmnd_info['site']['sound']:
+      key = ytmnd_info['site']['sound']['alternates'].keys()[0]
+      value = ytmnd_info['site']['sound']['alternates'][key]
+      if value['file_type'] != 'swf':
+        wav_type = ytmnd_info['site']['sound']['file_type']
+
+    simplified_info = {
+      'domain': domain,
+      'bgcolor': bgcolor,
+      'title': title,
+      'placement': placement,
+      'gif': domain + "." + gif_type,
+      'wav': domain + "." + wav_type,
+      'gif_type': gif_type,
+      'wav_type': wav_type,
+      'zoom_text': zoom_text,
+    }
+
+    return simplified_info
+
+  # Writes site JSON to a file
+  def write_json (self, domain, data):
     fn = open(domain + '.json', 'w')
-    fn.write( simplejson.dumps(ytmnd_info) )
+    fn.write( simplejson.dumps(data) )
     fn.close()
 
 if __name__ == '__main__':
@@ -194,19 +245,26 @@ if __name__ == '__main__':
 
   parser.add_option("-u", "--user", action="store_true")
   parser.add_option("-m", "--media-only", action="store_true")
+  parser.add_option("-f", "--html-only", action="store_true")
+  parser.add_option("-j", "--json-only", action="store_true")
   parser.add_option("-w", "--no-web-audio", action="store_true")
-  parser.add_option("-j", "--json", action="store_true")
+  parser.add_option("-p", "--print-json", action="store_true")
+  parser.add_option("-s", "--sleep", action="store", type="int", dest="sleep", default=5)
 
   (options, args) = parser.parse_args()
 
   if len(args) == 0:
-    print "usage: ./ytmnd.py [-u username] [--media-only] [--no-web-audio] [--json] [domain]"
+    parser.error("incorrect number of arguments")
     sys.exit(1)
   
   ytmnd = YTMND ()
+  ytmnd.user_mode = options.user
   ytmnd.media_only = options.media_only
+  ytmnd.html_only = options.html_only
+  ytmnd.json_only = options.json_only
   ytmnd.no_web_audio = options.no_web_audio
-  ytmnd.json = options.json
+  ytmnd.print_json = options.print_json
+  ytmnd.sleep = options.sleep
 
   if options.user:
     user = args[0]
